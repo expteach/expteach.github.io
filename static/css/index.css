@@ -176,13 +176,12 @@ textarea:focus {
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
 }
 
-/* Style for the VLM Response column (second column) */
-.module-container table tbody td:nth-child(2) {
+.module-container table tbody td.code {
   text-align: left;
   font-family: 'Courier New', monospace;
   font-size: 13px;
   white-space: pre-wrap;
-  border-left: 2px solid rgba(0, 0, 0, 0.1);
   padding: 1rem;
+  border: 1px solid #ddd;   /* Optional: border around code cells */
+  border-radius: 4px;       /* Optional: rounded corners */
 }
-

@@ -103,7 +103,7 @@
           <div class="column has-text-centered">
             <h1 class="title is-1 is-size-2 publication-title">Experience is the Best Teacher: Grounding VLMs for
               Robotics through Self-Generated Memory</h1>
-            <div class="is-size-5 publication-authors">
+            <!-- <div class="is-size-5 publication-authors">
               <span class="author-block">
                 <a href="https://www.linkedin.com/in/kaixian-qu-66a86215a/?originalSubdomain=ch">Kaixian
                   Qu</a><sup>1</sup>,</span>
@@ -127,8 +127,9 @@
             <div class="is-size-5 publication-authors">
               <span class="author-block"><sup>1</sup>Robotic Systems Lab, ETH Zurich</span>
               <span class="author-block"><sup>2</sup>Google DeepMind</span>
-            </div>
+            </div> -->
 
+            <!-- 
             <div class="column has-text-centered">
               <div class="publication-links">
                 <span class="link-block">
@@ -147,7 +148,7 @@
                     <span>arXiv</span>
                   </a>
                 </span>
-                <!-- <span class="link-block">
+                <span class="link-block">
                   <a href="https://www.youtube.com/watch?v=MrKrnHhk8IA"
                     class="external-link button is-normal is-rounded is-dark">
                     <span class="icon">
@@ -172,9 +173,10 @@
                     </span>
                     <span>Data</span>
                   </a>
-                </span> -->
+                </span>
               </div>
             </div>
+             -->
           </div>
         </div>
       </div>
@@ -443,146 +445,488 @@ Please select one VLM module to see the prompt.
             <p>Please select a module from the dropdown to view its details.</p>
           </div>
 
-          <div class="module-container" id="self-reflection-container" style="display:none;">
-            <h2 class="title is-4">Instruction: Put the apple on the plate.</h2>
+<div class="module-container" id="self-reflection-container" style="display:none;">
+  <h2 class="title is-4">Instruction: Put the apple on the plate.</h2>
 
-            <table class="table is-fullwidth is-striped" id="tab:stm_building2">
-              <thead>
-                <tr>
-                  <th style="width: 30%;">Scene</th>
-                  <th style="width: 70%;">VLM Response</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td><img src="./static/images/stm_apple_can/apple_can_1.png"
-                      alt="Apple next to salt container, plate on left"></td>
-                  <td class="code">
+  <table class="table is-striped is-four-fifths" id="tab:stm_building2">
+    <thead>
+      <tr>
+        <th style="width: 30%;">Scene</th>
+        <th style="width: 70%;">VLM Response</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Step 1: Pick Object (Initial Plan) -->
+      <tr>
+        <td><img src="./static/images/stm_apple_can/apple_can_1.png"
+            alt="Apple next to salt container, plate on left"></td>
+        <td class="code">
 Response from VLM Task Planner: {
     "name": "pick_object",
     "arguments": {
         "scene_description": "The apple is on the right side of the table, next to a salt container. The plate is on the left side of the table, with ample space around it.",
-        "reasoning": "The apple needs to be picked up first to be placed on the plate. The apple is isolated enough to be grasped without interference from the salt container.",
+        "reasoning": "The apple needs to be picked up first to be placed on the plate. The apple is isolated enough to be picked without interference from the salt container.",
         "target_object": "apple",
         "grasp_part": "",
         "specific_grasp_required": false,
-        "action_description": "Pick up the apple from the table."
+        "action_description": "Pick up the apple carefully to avoid dropping it."
     }
 }
-                  </td>
-                </tr>
-                <tr>
-                  <td><img src="./static/images/stm_apple_can/apple_can_2.png" alt="Robot failed to pick up apple"></td>
-                  <td class="code">
+        </td>
+      </tr>
+
+      <!-- Step 2: Success Detector - Pick Failed -->
+      <tr>
+        <td><img src="./static/images/stm_apple_can/apple_can_2.png" alt="Robot failed to pick up apple"></td>
+        <td class="code">
 Response from VLM Success Detector: {
     "name": "evaluate_action_status_and_issues",
     "arguments": {
-        "reasoning": "The apple is still on the table, to the right of the plate and next to the salt container. The robot's gripper is empty and positioned at the edge of the table, indicating that the action to pick up the apple has not been completed.",
+        "reasoning": "The action to detect is 'pick up the apple.' In the image, the apple is on the table, and the robot's gripper is open and positioned in front of the table. The apple is not currently in the gripper, indicating that the action to pick up the apple has not yet been completed. Additionally, there is a cylindrical container (possibly salt) placed very close to the apple, which could obstruct the gripper's ability to securely grasp the apple, especially given the limited precision of a two-finger gripper. The plate is on the table and is not blocking the apple. To proceed, the robot should first move the cylindrical container away from the apple to clear the area for a successful grasp.",
         "action_status": "failed",
-        "failure_cause": "The apple has not been picked up; the gripper is empty and the apple remains on the table",
-        "next_step_suggestions": "Reposition the gripper to approach the apple from a different angle, or move the salt container to create more space if needed, then attempt to grasp the apple again.",
+        "failure_cause": "The apple is not picked up, and a nearby container may obstruct the gripper.",
+        "next_step_suggestions": "Move the cylindrical container away from the apple to clear the grasping area, then attempt to pick up the apple again.",
         "is_task_completed": false
     }
 }
-                  </td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td class="code">
+        </td>
+      </tr>
+
+      <!-- Step 3: Task Planner - Push Object -->
+      <tr>
+        <td></td>
+        <td class="code">
 Response from VLM Task Planner: {
     "name": "push_object",
     "arguments": {
-        "scene_description": "The apple is on the table, positioned between a plate on the left and a salt container on the right. The salt container is close to the apple, potentially obstructing the gripper's approach.",
-        "reasoning": "The previous attempt to pick up the apple failed, possibly due to the proximity of the salt container. Pushing the salt container to the right will create more space for the gripper to approach the apple from a better angle.",
+        "scene_description": "The apple is on the right side of the table, next to a cylindrical salt container. The plate is on the left side of the table, with ample space around it. The robot's gripper is positioned in front of the table.",
+        "reasoning": "The salt container is obstructing the apple, making it difficult for the robot to grasp the apple securely. Pushing the salt container to the right will clear the area around the apple, allowing for a successful grasp.",
         "object_to_push": "salt container",
         "push_direction": "right",
-        "action_description": "Push the salt container to the right to create more space around the apple."
+        "action_description": "Push the salt container to the right to clear the area around the apple."
     }
 }
-                  </td>
-                </tr>
-                <tr>
-                  <td><img src="./static/images/stm_apple_can/apple_can_3.png"
-                      alt="Salt container pushed right, space around apple"></td>
-                  <td class="code">
+        </td>
+      </tr>
+
+      <!-- Step 4: Success Detector - Push Successful -->
+      <tr>
+        <td><img src="./static/images/stm_apple_can/apple_can_3.png"
+            alt="Salt container pushed right, space around apple"></td>
+        <td class="code">
 Response from VLM Success Detector: {
     "name": "evaluate_action_status_and_issues",
     "arguments": {
-        "reasoning": "The action was to push the salt container to the right to create more space around the apple, making it easier for the robot to grasp the apple and place it on the plate. In the current image, the salt container is already positioned to the right of the apple, and there is a clear gap between the apple and the salt container. The apple is not obstructed by the salt container, and there is sufficient space for the robot's gripper to approach the apple from multiple angles. The action appears to have been completed successfully, as the intended result (creating space around the apple) has been achieved.",
+        "reasoning": "The action to detect is pushing the salt container to the right to clear the area around the apple. In the current image, the salt container is already positioned to the right and is not blocking the apple. There is a clear space between the apple and the salt container, and the apple is not obstructed by any other objects. The area around the apple is clear, so the action of clearing the area around the apple by moving the salt container has been successfully completed.",
         "action_status": "successful",
-        "failure_cause": "None",
-        "next_step_suggestions": "Proceed to grasp the apple and move it onto the plate.",
+        "failure_cause": "No objects are blocking the apple; the salt container is already to the right.",
+        "next_step_suggestions": "Proceed to pick up the apple and place it on the plate as instructed.",
         "is_task_completed": false
     }
 }
-                  </td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td class="code">
+        </td>
+      </tr>
+
+      <!-- Step 5: Task Planner - Pick Again -->
+      <tr>
+        <td></td>
+        <td class="code">
 Response from VLM Task Planner: {
     "name": "pick_object",
     "arguments": {
-        "scene_description": "The apple is on the table, with a plate to its left and a salt container further to the right. The apple is unobstructed and can be directly accessed by the robot's gripper.",
-        "reasoning": "The apple is now unobstructed, and the robot can directly attempt to grasp it. The previous failure suggests approaching from a different angle, but since the salt container has been moved, a direct approach should be feasible.",
+        "scene_description": "The apple is on the right side of the table, with a salt container further to the right. The plate is on the left side of the table, with ample space around it.",
+        "reasoning": "The salt container has been moved, clearing the area around the apple. The apple can now be picked up without obstruction. Picking up the apple is the next step to place it on the plate.",
         "target_object": "apple",
         "grasp_part": "",
         "specific_grasp_required": false,
-        "action_description": "Approach and grasp the apple from above, ensuring a firm grip."
+        "action_description": "Pick up the apple carefully to avoid dropping it."
     }
 }
-                  </td>
-                </tr>
-                <tr>
-                  <td><img src="./static/images/stm_apple_can/apple_can_4.png" alt="Robot holding apple">
-                  </td>
-                  <td class="code">
+        </td>
+      </tr>
+
+      <!-- Step 6: Success Detector - Pick Successful -->
+      <tr>
+        <td><img src="./static/images/stm_apple_can/apple_can_4.png" alt="Robot holding apple"></td>
+        <td class="code">
 Response from VLM Success Detector: {
     "name": "evaluate_action_status_and_issues",
     "arguments": {
-        "reasoning": "The robot's gripper is currently holding the apple securely from above, as instructed. The apple is unobstructed and has been successfully grasped.",
+        "reasoning": "The robot's two-finger gripper is currently holding the apple securely. There are no objects blocking the apple, and the apple is not obstructed by any other items on the table. The action to 'pick up the apple' has been completed successfully. The next step is to move the apple and place it on the plate, as per the user's instruction.",
         "action_status": "successful",
-        "failure_cause": "None",
-        "next_step_suggestions": "Move the gripper holding the apple above the plate and release the apple onto the plate.",
+        "failure_cause": "N/A",
+        "next_step_suggestions": "Move the gripper holding the apple over the plate and release the apple onto the plate.",
         "is_task_completed": false
     }
 }
-                  </td>
-                </tr>
-                <tr>
-                  <td></td>
-                  <td class="code">
+        </td>
+      </tr>
+
+      <!-- Step 7: Task Planner - Place Object -->
+      <tr>
+        <td></td>
+        <td class="code">
 Response from VLM Task Planner: {
     "name": "place_object",
     "arguments": {
-        "scene_description": "The robot is holding an apple with its gripper. The plate is on the left side of the table, and there is enough space around it for placing the apple. The salt container is on the right side, away from the plate.",
-        "reasoning": "The robot has already grasped the apple successfully. The next logical step is to move the apple over the plate and release it. The plate is clearly visible and accessible, with no obstructions in the way.",
+        "scene_description": "The apple is held by the robot's gripper, positioned in front of the table. The plate is on the left side of the table, with ample space around it. The salt container is on the right side of the table, away from the plate.",
+        "reasoning": "The apple is already securely held by the robot's gripper. The plate is on the left side of the table, and there is ample space to place the apple without obstruction. The robot should move the apple over the plate and release it gently to complete the task.",
         "target_object": "apple",
         "placement_location": "plate",
         "precise_placement_spot_required": false,
-        "action_description": "Move the gripper holding the apple above the plate and release the apple onto the plate."
+        "action_description": "Move the apple over the plate and release it gently onto the plate."
     }
 }
-                  </td>
-                </tr>
-                <tr>
-                  <td><img src="./static/images/stm_apple_can/apple_can_5.png" alt="Apple placed on plate"></td>
-                  <td class="code">
+        </td>
+      </tr>
+
+      <!-- Step 8: Success Detector - Task Complete -->
+      <tr>
+        <td><img src="./static/images/stm_apple_can/apple_can_5.png" alt="Apple placed on plate"></td>
+        <td class="code">
 Response from VLM Success Detector: {
     "name": "evaluate_action_status_and_issues",
     "arguments": {
-        "reasoning": "The apple is already placed on the plate, and the robot's gripper is empty, indicating that the apple has been released.",
+        "reasoning": "The action was to move the apple over the plate and release it gently onto the plate. In the image, the apple is already on the plate, and there is ample space around the plate. The salt container is far from the plate and does not obstruct the apple or the plate. The robot's gripper is empty, indicating that the apple has already been released. There are no objects blocking the plate or the apple. The task appears to be completed as intended.",
         "action_status": "successful",
-        "failure_cause": "No failure; the apple is on the plate as instructed.",
+        "failure_cause": "No failure detected; the apple is on the plate as instructed.",
         "next_step_suggestions": "No further action needed; task is complete.",
         "is_task_completed": true
     }
 }
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="module-container" id="experience-summarization-container" style="display:none;">
+  <h2 class="title is-4">Instruction: Put the apple on the plate.</h2>
+
+  <table class="table is-striped is-four-fifths" id="tab:stm_summary">
+    <thead>
+      <tr>
+        <th style="width: 60%;">STM Logs</th>
+        <th style="width: 40%;">STM Summary</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Step 1: Pick Object (Initial Plan) -->
+      <tr>
+        <td class="code">
+{
+    "name": "pick_object",
+    "arguments": {
+        "scene_description": "The apple is on the right side of the table, next to a salt container. The plate is on the left side of the table, with ample space around it.",
+        "reasoning": "The apple needs to be picked up first to be placed on the plate. The apple is isolated enough to be picked without interference from the salt container.",
+        "target_object": "apple",
+        "grasp_part": "",
+        "specific_grasp_required": false,
+        "action_description": "Pick up the apple carefully to avoid dropping it."
+    }
+}
+
+{
+    "name": "evaluate_action_status_and_issues",
+    "arguments": {
+        "reasoning": "The action to detect is 'pick up the apple.' In the image, the apple is on the table, and the robot's gripper is open and positioned in front of the table. The apple is not currently in the gripper, indicating that the action to pick up the apple has not yet been completed. Additionally, there is a cylindrical container (possibly salt) placed very close to the apple, which could obstruct the gripper's ability to securely grasp the apple, especially given the limited precision of a two-finger gripper. The plate is on the table and is not blocking the apple. To proceed, the robot should first move the cylindrical container away from the apple to clear the area for a successful grasp.",
+        "action_status": "failed",
+        "failure_cause": "The apple is not picked up, and a nearby container may obstruct the gripper.",
+        "next_step_suggestions": "Move the cylindrical container away from the apple to clear the grasping area, then attempt to pick up the apple again.",
+        "is_task_completed": false
+    }
+}
+
+{
+    "name": "push_object",
+    "arguments": {
+        "scene_description": "The apple is on the right side of the table, next to a cylindrical salt container. The plate is on the left side of the table, with ample space around it. The robot's gripper is positioned in front of the table.",
+        "reasoning": "The salt container is obstructing the apple, making it difficult for the robot to grasp the apple securely. Pushing the salt container to the right will clear the area around the apple, allowing for a successful grasp.",
+        "object_to_push": "salt container",
+        "push_direction": "right",
+        "action_description": "Push the salt container to the right to clear the area around the apple."
+    }
+}
+
+{
+    "name": "evaluate_action_status_and_issues",
+    "arguments": {
+        "reasoning": "The action to detect is pushing the salt container to the right to clear the area around the apple. In the current image, the salt container is already positioned to the right and is not blocking the apple. There is a clear space between the apple and the salt container, and the apple is not obstructed by any other objects. The area around the apple is clear, so the action of clearing the area around the apple by moving the salt container has been successfully completed.",
+        "action_status": "successful",
+        "failure_cause": "No objects are blocking the apple; the salt container is already to the right.",
+        "next_step_suggestions": "Proceed to pick up the apple and place it on the plate as instructed.",
+        "is_task_completed": false
+    }
+}
+
+{
+    "name": "pick_object",
+    "arguments": {
+        "scene_description": "The apple is on the right side of the table, with a salt container further to the right. The plate is on the left side of the table, with ample space around it.",
+        "reasoning": "The salt container has been moved, clearing the area around the apple. The apple can now be picked up without obstruction. Picking up the apple is the next step to place it on the plate.",
+        "target_object": "apple",
+        "grasp_part": "",
+        "specific_grasp_required": false,
+        "action_description": "Pick up the apple carefully to avoid dropping it."
+    }
+}
+
+{
+    "name": "evaluate_action_status_and_issues",
+    "arguments": {
+        "reasoning": "The robot's two-finger gripper is currently holding the apple securely. There are no objects blocking the apple, and the apple is not obstructed by any other items on the table. The action to 'pick up the apple' has been completed successfully. The next step is to move the apple and place it on the plate, as per the user's instruction.",
+        "action_status": "successful",
+        "failure_cause": "N/A",
+        "next_step_suggestions": "Move the gripper holding the apple over the plate and release the apple onto the plate.",
+        "is_task_completed": false
+    }
+}
+
+{
+    "name": "place_object",
+    "arguments": {
+        "scene_description": "The apple is held by the robot's gripper, positioned in front of the table. The plate is on the left side of the table, with ample space around it. The salt container is on the right side of the table, away from the plate.",
+        "reasoning": "The apple is already securely held by the robot's gripper. The plate is on the left side of the table, and there is ample space to place the apple without obstruction. The robot should move the apple over the plate and release it gently to complete the task.",
+        "target_object": "apple",
+        "placement_location": "plate",
+        "precise_placement_spot_required": false,
+        "action_description": "Move the apple over the plate and release it gently onto the plate."
+    }
+}
+
+{
+    "name": "evaluate_action_status_and_issues",
+    "arguments": {
+        "reasoning": "The action was to move the apple over the plate and release it gently onto the plate. In the image, the apple is already on the plate, and there is ample space around the plate. The salt container is far from the plate and does not obstruct the apple or the plate. The robot's gripper is empty, indicating that the apple has already been released. There are no objects blocking the plate or the apple. The task appears to be completed as intended.",
+        "action_status": "successful",
+        "failure_cause": "No failure detected; the apple is on the plate as instructed.",
+        "next_step_suggestions": "No further action needed; task is complete.",
+        "is_task_completed": true
+    }
+}
+        </td>
+        <td class="code">
+Response from VLM Experience Summarizer: {
+    "name": "summarize_robot_experience",
+    "arguments": {
+        "summary": "The robot was tasked with placing an apple on a plate. Initially, the apple was on a cluttered table next to a salt container, which obstructed the robot's ability to grasp the apple. The robot first attempted to pick up the apple but failed due to the obstruction. It then successfully pushed the salt container to the right, clearing the area around the apple. With the obstruction removed, the robot was able to pick up the apple securely. Finally, the robot moved the apple over the plate and released it gently, completing the task successfully. This experience highlights the importance of clearing obstructions before attempting to grasp objects, especially when using a two-finger gripper."
+    }
+}
+
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<div class="module-container" id="experience-retrieval-container" style="display:none;">
+  <h2 class="title is-4">Instruction: Put the tennis ball on the plate.</h2>
+
+  <table class="table is-striped is-four-fifths" id="tab:ltm_generalization2">
+    <thead>
+      <tr>
+        <th style="width: 30%;">Scene</th>
+        <th style="width: 70%;">Retrieved LTM</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Row: Tennis Ball Scenario -->
+      <tr>
+        <td>
+          <img src="./static/images/ltm_tennis_ball/tennisball_1.png" alt="Tennis ball on table" style="width:100%;">
+        </td>
+        <td class="code">
+<strong>long-term memory 1</strong>
+Instruction: Put the apple on the plate.
+Scene: The apple is on the right side of the table, next to a salt container. The plate is on the left side of the table, with ample space around it.
+Experience: The robot was tasked with placing an apple on a plate. Initially, the apple was on a cluttered table next to a salt container, which obstructed the robot's ability to grasp the apple. The robot first attempted to pick up the apple but failed due to the obstruction. It then successfully pushed the salt container to the right, clearing the area around the apple. With the obstruction removed, the robot was able to pick up the apple securely. Finally, the robot moved the apple over the plate and released it gently, completing the task successfully. This experience highlights the importance of clearing obstructions before attempting to grasp objects, especially when using a two-finger gripper.
+
+<strong>long-term memory 2</strong>
+Instruction: Place the spoon next to the plate.
+Scene: The spoon was already in the robot's gripper, and the plate was centered on the table.
+Experience: The robot placed the spoon in the middle of the plate.
+
+<strong>long-term memory 3</strong>
+Instruction: Move the egg close to the banana.
+Scene: The egg is in the center of the table, with the banana on the right side. The robot is facing the egg directly, and the banana is further to the right.
+Experience: Initially, the robot attempted to pick up the egg but failed as it applied too much pressure, resulting in the egg being crushed. The robot reflected that a gentler grip to scoop the egg would be more effective. Subsequently, the robot considered gently pushing the egg towards the banana but was uncertain due to the egg's potential to roll unpredictably. Finally, the robot successfully pushed the egg towards the banana, completing the task without further issues.
+
+<strong>long-term memory 4</strong>
+Instruction: Place the remote on the table.
+Scene: The robot was already holding the remote, and the table surface was empty.
+Experience: The robot positioned the remote over the table area within arm’s reach and released it flat onto the surface.
+
+<strong>long-term memory 5</strong>
+Instruction: Place the napkin on the tray.
+Scene: The napkin was in the robot’s gripper and the tray was centered on the table.
+Experience: The robot successfully released the napkin flat onto the tray.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<div class="module-container" id="grounding-with-memory-container" style="display:none;">
+  <h2 class="title is-4">Instruction: Put the tennis ball on the plate.</h2>
+
+  <table class="table is-striped is-four-fifths" id="tab:grounding-with-memory">
+    <thead>
+      <tr>
+        <th style="width: 30%;">Scene</th>
+        <th style="width: 70%;">VLM Response</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Step 1: Push Object (Initial Plan) -->
+      <tr>
+        <td><img src="./static/images/ltm_tennis_ball/tennisball_1.png" alt="Tennis ball next to fan"></td>
+        <td class="code">
+Response from VLM Task Planner: {
+    "name": "push_object",
+    "arguments": {
+        "scene_description": "The tennis ball is next to a fan on the right side of the table. The plate is on the left side of the table.",
+        "reasoning": "The fan is obstructing the path to the tennis ball. Pushing the fan to the right will clear the path, allowing the robot to pick up the tennis ball without obstruction.",
+        "object_to_push": "fan",
+        "push_direction": "right",
+        "action_description": "Push the fan to the right to clear the path to the tennis ball."
+    }
+}
+        </td>
+      </tr>
+
+      <!-- Step 2: Success Detector - Push Successful (but unnecessary) -->
+      <tr>
+        <td><img src="./static/images/ltm_tennis_ball/tennisball_2.png" alt="Fan already to the right, path clear"></td>
+        <td class="code">
+Response from VLM Success Detector: {
+    "name": "evaluate_action_status_and_issues",
+    "arguments": {
+        "reasoning": "The action to detect was to push the fan to the right to clear the path to the tennis ball. In the current image, the fan is still positioned to the right of the tennis ball, and the tennis ball is not blocked by the fan. The path from the robot to the tennis ball appears clear, so the action of clearing the path by pushing the fan seems unnecessary or already achieved. The tennis ball is accessible, and the next step should be to grasp the tennis ball and move it toward the plate on the left side of the table.",
+        "action_status": "successful",
+        "failure_cause": "No failure; the path to the tennis ball is already clear.",
+        "next_step_suggestions": "Proceed to grasp the tennis ball and move it toward the plate.",
+        "is_task_completed": false
+    }
+}
+        </td>
+      </tr>
+
+      <!-- Step 3: Task Planner - Pick Object -->
+      <tr>
+        <td></td>
+        <td class="code">
+Response from VLM Task Planner: {
+    "name": "pick_object",
+    "arguments": {
+        "scene_description": "The tennis ball is on the table, with a plate on the left and a fan on the right. The path to the tennis ball is clear.",
+        "reasoning": "The path to the tennis ball is clear, and there are no obstructions. The robot can directly pick up the tennis ball without needing to move any other objects.",
+        "target_object": "tennis ball",
+        "grasp_part": "",
+        "specific_grasp_required": false,
+        "action_description": "Pick up the tennis ball from the table."
+    }
+}
+        </td>
+      </tr>
+
+      <!-- Step 4: Success Detector - Pick Successful -->
+      <tr>
+        <td><img src="./static/images/ltm_tennis_ball/tennisball_3.png" alt="Robot holding tennis ball"></td>
+        <td class="code">
+Response from VLM Success Detector: {
+    "name": "evaluate_action_status_and_issues",
+    "arguments": {
+        "reasoning": "The robot's two-finger gripper is currently holding the tennis ball securely. The tennis ball has been successfully picked up from the table, as indicated by its position within the gripper.",
+        "action_status": "successful",
+        "failure_cause": "N/A - The action was successful.",
+        "next_step_suggestions": "Move the gripper holding the tennis ball over the plate and release the ball onto the plate.",
+        "is_task_completed": false
+    }
+}
+        </td>
+      </tr>
+
+      <!-- Step 5: Task Planner - Place Object -->
+      <tr>
+        <td></td>
+        <td class="code">
+Response from VLM Task Planner: {
+    "name": "place_object",
+    "arguments": {
+        "scene_description": "The robot is holding a tennis ball in its gripper. The plate is on the left side of the table, and there is a fan on the right side. The table is otherwise clear.",
+        "reasoning": "The robot has successfully picked up the tennis ball and needs to place it on the plate. The plate is clearly visible and accessible, and there are no obstacles in the way. The robot should move the gripper over the plate and release the ball gently to ensure it lands on the plate.",
+        "target_object": "tennis ball",
+        "placement_location": "plate",
+        "precise_placement_spot_required": false,
+        "action_description": "Move the gripper holding the tennis ball over the plate and release the ball onto the plate."
+    }
+}
+        </td>
+      </tr>
+
+      <!-- Step 6: Success Detector - Task Complete -->
+      <tr>
+        <td><img src="./static/images/ltm_tennis_ball/tennisball_4.png" alt="Tennis ball placed on plate"></td>
+        <td class="code">
+Response from VLM Success Detector: {
+    "name": "evaluate_action_status_and_issues",
+    "arguments": {
+        "reasoning": "The image shows the tennis ball already placed on the plate, and the robot's gripper is empty and positioned above the table. The plate is on the left side of the table, and the fan is on the right side. There are no visible obstacles or issues with the placement. The tennis ball is securely on the plate, which matches the user's instruction to put the tennis ball on the plate.",
+        "action_status": "successful",
+        "failure_cause": "No failure; the tennis ball is on the plate as instructed.",
+        "next_step_suggestions": "No further action needed; task is complete.",
+        "is_task_completed": true
+    }
+}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<div class="module-container" id="image-annotation-container" style="display:none;">
+  <table class="table is-striped is-four-fifths" id="tab:image-annotation-comparison">
+    <thead>
+      <tr>
+        <th style="width: 50%;">Picking objects without annotation</th>
+        <th style="width: 50%;">Picking objects with annotation</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr>
+        <td>
+          <img src="./static/images/image_annotation/drumstick_no_annotation.png" >
+        </td>
+        <td>
+          <img src="./static/images/image_annotation/drumstick_annotation.png">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+          <img src="./static/images/image_annotation/skewer_no_annotation.png">
+        </td>
+        <td>
+          <img src="./static/images/image_annotation/skewer_annotation.png">
+        </td>
+      </tr>
+
+      <tr>
+        <td>
+            <img src="./static/images/image_annotation/brush_no_annotation.png">
+        </td>
+        <td>
+            <img src="./static/images/image_annotation/brush_annotation.png">
+        </td>
+      </tr>
+
+    </tbody>
+  </table>
+</div>
 
         </div>
       </div>
